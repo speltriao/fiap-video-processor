@@ -1,4 +1,4 @@
-name: SonarCloud Analysis
+name: SonarQube Cloud Analysis
 
 on:
   push:
@@ -10,36 +10,32 @@ on:
 
 jobs:
   sonarcloud:
-    name: SonarCloud Scan
+    name: Analyze with SonarCloud
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'  # Or your specific Python version
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-      - name: Cache SonarCloud dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar-${{ hashFiles('**/*.py') }}
-          restore-keys: |
-            ${{ runner.os }}-sonar-
+    - name: SonarCloud Scan
+      uses: sonarsource/sonarcloud-github-action@v2
+      with:
+        organization: 'speltriao'
+        projectKey: 'fiap-video-processor'
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - name: Run SonarCloud
-        uses: SonarSource/sonarcloud-github-action@v2
-        with:
-          projectKey: ${{ secrets.SONAR_PROJECT_KEY }}
-          organization: ${{ secrets.SONAR_ORGANIZATION }}
-          projectBaseDir: .
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    - name: Run tests (optional)
+      run: |
+        # Optional: Run your tests here if you have any test scripts
+        pytest
