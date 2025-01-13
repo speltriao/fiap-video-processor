@@ -37,6 +37,5 @@ jobs:
 
       - name: Run SonarCloud
         uses: SonarSource/sonarcloud-github-action@v1
-        with:
-          organization: your-organization-key
-          token: ${{ secrets.SONAR_TOKEN }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
