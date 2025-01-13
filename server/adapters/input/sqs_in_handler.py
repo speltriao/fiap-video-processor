@@ -4,7 +4,7 @@ import json
 import aioboto3
 from aiobotocore import client
 
-from tools.logging import logger
+from server.tools.logging import logger
 
 
 class SQSInHandler:
