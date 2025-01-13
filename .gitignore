@@ -1,0 +1,44 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+.venv/
+env/
+venv/
+venv.bak/
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.iml
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# Python packaging
+*.egg-info/
+*.dist-info/
+*.egg
+
+# Coverage reports
+.coverage
+.coverage.*
+nosetests.xml
+pytest.xml
+test-results/
+tox/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# mypy
+.mypy_cache/
+
+# pytest
+*.log
