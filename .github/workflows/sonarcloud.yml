@@ -1,41 +1,38 @@
-name: SonarQube Cloud Analysis
+name: SonarQube Scan
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main, develop ] # Adjust branches as needed
   pull_request:
-    branches:
-      - main
+    branches: [ main, develop ]
 
 jobs:
-  sonarcloud:
-    name: Analyze with SonarCloud
+  build:
+    name: Build and analyze
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones might miss some history
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'  # Or your specific Python version
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12' # Or your desired version
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt # If you have dependencies
 
-    - name: SonarCloud Scan
-      uses: sonarsource/sonarcloud-github-action@v2
-      with:
-        organization: 'speltriao'
-        projectKey: 'fiap-video-processor'
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Run tests (Optional but recommended)
+        run: pytest # Or your test command
 
-    - name: Run tests (optional)
-      run: |
-        # Optional: Run your tests here if you have any test scripts
-        pytest
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Store your SonarQube token as a secret
+
+      - name: SonarQube Quality Gate check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
