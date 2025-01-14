@@ -1,7 +1,7 @@
 import asyncio
 import os
 
-from server.adapters.input.sqs_in_handler import SQSInHandler
+from server.adapters.input.queue.sqs_in_handler import SQSInHandler
 
 
 def main():
