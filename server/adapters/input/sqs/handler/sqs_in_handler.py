@@ -7,6 +7,7 @@ from server import adapters, logger
 from server.adapters.aws_services_enum import AWSServicesEnum
 from server.adapters.input.sqs.dto.conversion_in_dto import ConversionInDTO
 from server.adapters.input.sqs.mapper.conversion_in_mapper import ConversionInMapper
+from server.adapters.output.sqs.handler.sqs_out_handler import SQSOutHandler
 from server.domain.entity.conversion_entity import ConversionEntity
 from server.domain.usecase.abc_conversion_usecase import ABCConversionUseCase
 from server.env import Environment
@@ -15,6 +16,7 @@ from server.env import Environment
 class SQSInHandler:
     def __init__(self, env: Environment):
         self.queue_url = env.AWS_SQS_INPUT_QUEUE
+        self.SQSOutHandler = SQSOutHandler(env)
 
     async def receive_messages(self):
         """
@@ -56,10 +58,10 @@ class SQSInHandler:
             body: dict = json.loads(message["Body"])
             logger.debug(f"Message body: {body}")
 
-            conversion_dto: ConversionInDTO = ConversionInDTO(**body)
-            conversion: ConversionEntity = ConversionInMapper.convert_to_entity(conversion_dto)
-            await ABCConversionUseCase().create_conversion(conversion)
+            conversion_input: ConversionEntity = ConversionInMapper.convert_to_entity(ConversionInDTO(**body))
+            completed_conversion: ConversionEntity = await ABCConversionUseCase().create_conversion(conversion_input)
 
+            await self.SQSOutHandler.send_message(completed_conversion)
         except json.JSONDecodeError as e:
             logger.error(f"Failed to decode message body: {e}")
         except Exception as e:
