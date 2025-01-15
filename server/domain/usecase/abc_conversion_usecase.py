@@ -1,18 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from server.domain.entity.conversion_entity import ConversionModel
+from server.domain.entity.conversion_entity import ConversionEntity
 
 
 class ABCConversionUseCase(ABC):
     @abstractmethod
-    def list_all_conversions(self) -> List[ConversionModel]:
-        """List all the conversions"""
+    async def create_conversion(self, conversion: ConversionEntity) -> ConversionEntity:
+        """Create a new video conversion into images"""
         pass
-
-    @abstractmethod
-    def create_conversion(self, conversion: ConversionModel) -> ConversionModel:
-        """Create a new conversion and save its details to the DB"""
-        pass
-
-    # TODO: complete use case(s)
