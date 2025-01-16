@@ -6,5 +6,9 @@ class ConversionInMapper:
     @staticmethod
     def convert_to_entity(dto: ConversionInDTO) -> ConversionEntity:
         return ConversionEntity(
-            file_name=dto.file_name, file_size=dto.file_size, s3_link=dto.s3_link, creation_date=dto.creation_date
+            id_user=dto.id_user,
+            file_name=dto.file_name,
+            file_size=dto.file_size,
+            s3_file_key=dto.s3_file_key,
+            creation_date=dto.creation_date,
         )

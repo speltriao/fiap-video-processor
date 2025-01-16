@@ -5,10 +5,10 @@ from pydantic import BaseModel
 
 
 class ConversionEntity(BaseModel):
-    id: Optional[int] = None  # Only exists after being populated by the DB
-    file_name: str
+    id_user: int
+    file_name: Optional[str] = None
     file_size: int
-    s3_link: str
+    s3_file_key: str
+    s3_zip_file_key: Optional[str] = None  # Only exists after the conversion finishes
     creation_date: datetime
     finished_date: Optional[datetime] = None  # Only exists after the conversion finishes
-    model_config = {"from_attributes": True}
