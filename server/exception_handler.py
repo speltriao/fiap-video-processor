@@ -30,7 +30,6 @@ def exception_handler(func: Callable) -> Callable:
                     logger.error(f"Error sending error message: {send_error}")
             else:
                 logger.error("id_request is not set, cannot send error message.")
-            raise
         except Exception as e:
             logger.error(f"Unknown exception: {e}")
 

@@ -1,6 +1,8 @@
 import asyncio
 import os
+import shutil
 from datetime import datetime
+from pathlib import Path
 from zipfile import ZipFile
 
 import ffmpeg
@@ -9,7 +11,7 @@ from server import logger
 from server.domain.entity.conversion_entity import ConversionEntity
 from server.domain.usecase.abc_conversion_usecase import ABCConversionUseCase
 from server.env import Environment
-from server.exception_handler import CustomException, exception_handler
+from server.exception_handler import CustomException
 
 
 class ConversionService(ABCConversionUseCase):
@@ -35,7 +37,7 @@ class ConversionService(ABCConversionUseCase):
         conversion.finished_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         conversion.local_zip_file_name = self._zip_file_name
         logger.info("Conversion finished.")
-        # await self.__delete_folders_async([self._temp_images_output_folder,])
+        await self._delete_directory(self._temp_images_output_folder)
 
         return conversion
 
@@ -67,6 +69,7 @@ class ConversionService(ABCConversionUseCase):
             current_time += interval
 
     def _get_video_duration(self, local_video_path: str) -> float:
+        """Obtains the video time lenght"""
         try:
             probe = ffmpeg.probe(local_video_path)
             return float(probe["format"]["duration"])
@@ -93,20 +96,18 @@ class ConversionService(ABCConversionUseCase):
                     zipf.write(os.path.join(root, file), arcname=file)
         return zip_file_path
 
-    # async def __delete_local_files_folders(self, paths: list[str]):
-    # Asynchronously deletes local temp files and folders.
-    #     type
-    #     for path in paths:
-    #         folder = Path(path)
-    #
-    #         if not folder.exists():
-    #             logger.warn(f"The folder '{folder_path}' does not exist.")
-    #             continue
-    #
-    #         try:
-    #             await asyncio.to_thread(shutil.rmtree, folder_path, ignore_errors=False, onerror=None)
-    #             logger.info(f"Folder '{folder_path}' and all its contents have been deleted.")
-    #         except PermissionError:
-    #             logger.error(f"Permission denied: Unable to delete the folder '{folder_path}'.")
-    #         except Exception as e:
-    #             logger.error(f"An error occurred while deleting the folder: {e}")
+    async def _delete_directory(self, path: str):
+        """Asynchronously deletes a directory and its contents"""
+        dir_path = Path(path)
+
+        if not dir_path.exists():
+            logger.warn(f"The directory '{dir_path}' does not exist.")
+            return
+        try:
+            if dir_path.is_dir():
+                await asyncio.to_thread(shutil.rmtree, dir_path, ignore_errors=False, onerror=None)
+                logger.info(f"Directory '{dir_path}' and all its contents have been deleted.")
+            else:
+                logger.warn(f"The path '{dir_path}' is not a directory.")
+        except Exception as e:
+            logger.error(f"An error occurred while deleting the directory '{dir_path}': {e}")
