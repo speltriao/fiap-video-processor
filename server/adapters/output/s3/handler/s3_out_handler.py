@@ -4,6 +4,7 @@ from server import logger
 from server.adapters.abc_base_s3 import ABCBaseS3
 from server.domain.entity.conversion_entity import ConversionEntity
 from server.env import Environment
+from server.exception_handler import CustomException
 
 
 class S3OutHandler(ABCBaseS3):
@@ -23,4 +24,4 @@ class S3OutHandler(ABCBaseS3):
             logger.error(f"Failed to upload file to S3: {conversion.local_video_path} to {s3_file_location}")
             logger.error(f"Exception: {str(e)}")
             logger.error("Traceback: %s", traceback.format_exc())
-            raise
+            raise CustomException(id=conversion.id, message=e)

@@ -1,5 +1,7 @@
 import logging
 
+from server import env
+
 logging.basicConfig(
     level=logging.DEBUG,  # Set default log level (can be DEBUG, INFO, WARNING, ERROR)
     format="%(asctime)s - %(levelname)s - %(message)s",

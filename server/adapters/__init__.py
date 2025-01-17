@@ -1,5 +1,6 @@
 import aioboto3
 
+from server.adapters.output.sqs.handler.sqs_out_handler import SQSOutHandler
 from server.env import Environment
 
 session = aioboto3.session.Session(

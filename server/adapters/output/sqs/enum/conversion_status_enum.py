@@ -2,5 +2,5 @@ from enum import Enum
 
 
 class ConversionStatusEnum(Enum):
-    success = "OK"
-    failure = "ERROR"
+    ok = "OK"
+    error = "ERROR"

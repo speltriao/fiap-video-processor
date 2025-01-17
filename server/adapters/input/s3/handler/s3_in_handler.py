@@ -7,6 +7,7 @@ from server.adapters.aws_services_enum import AWSServicesEnum
 from server.adapters.input.sqs.dto.conversion_in_dto import ConversionInDTO
 from server.domain.entity.conversion_entity import ConversionEntity
 from server.env import Environment
+from server.exception_handler import CustomException
 
 
 class S3InHandler(ABCBaseS3):
@@ -25,5 +26,6 @@ class S3InHandler(ABCBaseS3):
             logger.info(f"Downloaded file from S3: {s3_file_key} to {video_temp_file_location}")
         except Exception as e:
             logger.error(f"Error downloading file from S3: {s3_file_key} to {video_temp_file_location}. Error: {e}")
-            raise
+            raise CustomException(id=conversion_entity.id, message=e)
+
         return video_temp_file_location
