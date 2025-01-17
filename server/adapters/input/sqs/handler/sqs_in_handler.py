@@ -14,7 +14,7 @@ from server.adapters.output.sqs.handler.sqs_out_handler import SQSOutHandler
 from server.domain.entity.conversion_entity import ConversionEntity
 from server.domain.usecase.abc_conversion_usecase import ABCConversionUseCase
 from server.env import Environment
-from server.exception_handler import CustomException
+from server.exception_handler import CustomException, exception_handler
 
 
 class SQSInHandler:
@@ -54,6 +54,7 @@ class SQSInHandler:
                 # After processing, delete the message
                 await self._delete_processed_message(message, sqs_client)
 
+    @exception_handler
     async def _process_message(self, message: dict) -> None:
         """
         Process a single SQS message.

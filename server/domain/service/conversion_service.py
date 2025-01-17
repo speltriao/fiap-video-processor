@@ -11,7 +11,7 @@ from server import logger
 from server.domain.entity.conversion_entity import ConversionEntity
 from server.domain.usecase.abc_conversion_usecase import ABCConversionUseCase
 from server.env import Environment
-from server.exception_handler import CustomException
+from server.exception_handler import CustomException, exception_handler
 
 
 class ConversionService(ABCConversionUseCase):
@@ -41,6 +41,7 @@ class ConversionService(ABCConversionUseCase):
 
         return conversion
 
+    @exception_handler
     async def _convert_video(self, video_temp_file_location: str) -> None:
         duration: float = self._get_video_duration(video_temp_file_location)
         interval: float = 20
@@ -76,6 +77,7 @@ class ConversionService(ABCConversionUseCase):
         except Exception as e:
             raise CustomException(id=self._id, message=e)
 
+    @exception_handler
     async def _create_images_zip(self, file_name_no_extension: str) -> str:
         """Asynchronously creates the zip with all images
         and returns the temp location of the zip

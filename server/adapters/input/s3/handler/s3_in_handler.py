@@ -7,13 +7,14 @@ from server.adapters.aws_services_enum import AWSServicesEnum
 from server.adapters.input.sqs.dto.conversion_in_dto import ConversionInDTO
 from server.domain.entity.conversion_entity import ConversionEntity
 from server.env import Environment
-from server.exception_handler import CustomException
+from server.exception_handler import CustomException, exception_handler
 
 
 class S3InHandler(ABCBaseS3):
     def __init__(self, env: Environment):
         super().__init__(env)
 
+    @exception_handler
     async def download_file_from_s3(self, conversion_entity: ConversionEntity, s3_file_key: str) -> str:
         """Asynchronously download a file from S3 to local file system."""
         video_temp_file_location: str = self._local_temp_folder + "/" + conversion_entity.file_name
