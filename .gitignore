@@ -42,3 +42,4 @@ tox/
 
 # pytest
 *.log
+fia-video-processor.env
