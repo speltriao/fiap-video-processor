@@ -1,10 +1,5 @@
-import traceback
-from typing import Callable
-
-from server import adapters, logger
+from server import logger
 from server.adapters.abc_base_s3 import ABCBaseS3
-from server.adapters.aws_services_enum import AWSServicesEnum
-from server.adapters.input.sqs.dto.conversion_in_dto import ConversionInDTO
 from server.domain.entity.conversion_entity import ConversionEntity
 from server.env import Environment
 from server.exception_handler import CustomException, exception_handler

@@ -1,8 +1,26 @@
+from unittest.mock import patch
+
+
+def mock_exception_handler_decorator(f):
+    """Decorate by doing nothing.
+    The exception handler should not be called in tests.
+    """
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+patch("server.exception_handler.exception_handler", mock_exception_handler_decorator).start()
+
 import asyncio
 import os
+from functools import wraps
 
 import pytest
-from mockito import mock, when
+from mockito import when
 
 
 @pytest.fixture(scope="session")

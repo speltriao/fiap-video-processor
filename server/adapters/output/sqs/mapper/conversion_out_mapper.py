@@ -1,4 +1,3 @@
-from server.adapters.input.sqs.dto.conversion_in_dto import ConversionInDTO
 from server.adapters.output.sqs.dto.conversion_out_dto import ConversionErrorOutDTO, ConversionOutDTO
 from server.adapters.output.sqs.enum.conversion_status_enum import ConversionStatusEnum
 from server.domain.entity.conversion_entity import ConversionEntity
