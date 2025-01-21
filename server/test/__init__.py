@@ -35,6 +35,10 @@ async def tests_setup():
 future_none = asyncio.Future().set_result(None)
 
 
+async def return_none():
+    return None
+
+
 def to_future(input_future: Any):
     future = asyncio.Future()
     future.set_result(input_future)
