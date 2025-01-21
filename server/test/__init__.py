@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import patch
 
 
@@ -31,5 +32,10 @@ async def tests_setup():
     when(os).getenv("AWS_SESSION_TOKEN").thenReturn("mock_session_token")
 
 
-future_none = asyncio.Future()
-future_none.set_result(None)
+future_none = asyncio.Future().set_result(None)
+
+
+def to_future(input_future: Any):
+    future = asyncio.Future()
+    future.set_result(input_future)
+    return future
