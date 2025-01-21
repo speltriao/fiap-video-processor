@@ -10,4 +10,4 @@ class Environment:
     AWS_SQS_OUTPUT_QUEUE = os.getenv("AWS_SQS_OUTPUT_QUEUE", default="VideoProcessOutput")
     AWS_S3_BUCKET_NAME = os.getenv("AWS_S3_BUCKET_NAME", default="frameshot")
     AWS_S3_BUCKET_OUTPUT_FOLDER = os.getenv("AWS_S3_BUCKET_OUTPUT_FOLDER", default="output_zip/")
-    TEMP_FOLDER = os.getenv("TEMP_FOLDER", default="C:/Users/Public/Downloads")
+    TEMP_FOLDER = os.getenv("TEMP_FOLDER", default="/tmp")

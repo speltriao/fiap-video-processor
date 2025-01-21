@@ -22,4 +22,4 @@ class ABCBaseS3(ABC):
         except Exception as e:
             logger.error(f"Error performing S3 operation: {e}")
             logger.error(traceback.format_exc())
-            raise
+            raise e
