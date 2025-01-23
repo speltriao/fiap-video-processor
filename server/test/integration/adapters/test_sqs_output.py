@@ -9,9 +9,6 @@ from server.test.integration.adapters import ABCAdaptersTestBase
 
 class TestSQSOutputHandler(ABCAdaptersTestBase):
     # Mock ConversionEntity and ConversionOutMapper for the test
-    @pytest.fixture
-    def mock_conversion_entity(self):
-        return AsyncMock(spec=ConversionEntity)
 
     @pytest.fixture
     def mock_conversion_out_mapper(self):
@@ -21,7 +18,7 @@ class TestSQSOutputHandler(ABCAdaptersTestBase):
             yield mock_mapper
 
     @pytest.mark.asyncio
-    async def test_send_success_message(self, mock_conversion_entity, mock_conversion_out_mapper):
+    async def test_send_success_message(self, mock_conversion_out_mapper):
         # Mock queue URL and response
         mock_queue_url = "https://sqs.fake-queue-url.amazonaws.com/123456789012/MyQueue"
         mock_message_id = "12345"
@@ -39,9 +36,9 @@ class TestSQSOutputHandler(ABCAdaptersTestBase):
             mock_conversion_out_mapper.return_value.json.return_value = '{"mocked_key": "mocked_value"}'
 
             # Call the method under test
-            await handler.send_success_message(mock_conversion_entity, "s3://mocked-bucket/mock-video-path")
+            await handler.send_success_message(self._mock_conversion, "s3://mocked-bucket/mock-video-path")
 
             # Assertions
             mock_conversion_out_mapper.assert_called_once_with(
-                mock_conversion_entity, "s3://mocked-bucket/mock-video-path"
+                self._mock_conversion, "s3://mocked-bucket/mock-video-path"
             )
