@@ -1,7 +1,7 @@
 import asyncio
 import os
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -34,7 +34,7 @@ class ConversionService(ABCConversionUseCase):
 
         await self._convert_video(conversion.local_video_path)
         conversion.local_zip_path = await self._create_images_zip(file_name_no_extension)
-        conversion.finished_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        conversion.finished_date = datetime.now(timezone.utc).isoformat()
         conversion.local_zip_file_name = self._zip_file_name
         logger.info("Conversion finished.")
         await self._delete_directory(self._temp_images_output_folder)

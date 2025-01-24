@@ -17,12 +17,12 @@ class S3OutHandler(ABCBaseS3):
         s3_file_location: str = "output_zip/" + conversion.local_zip_file_name
         try:
             await self._perform_s3_operation(
-                lambda client: client.upload_file(conversion.local_video_path, self._bucket_name, s3_file_location)
+                lambda client: client.upload_file(conversion.local_zip_path, self._bucket_name, s3_file_location)
             )
-            logger.info(f"Uploaded file to S3: {conversion.local_video_path} to {s3_file_location}")
+            logger.info(f"Uploaded file to S3: {conversion.local_zip_path} to {s3_file_location}")
             return s3_file_location
         except Exception as e:
-            logger.error(f"Failed to upload file to S3: {conversion.local_video_path} to {s3_file_location}")
+            logger.error(f"Failed to upload file to S3: {conversion.local_zip_path} to {s3_file_location}")
             logger.error(f"Exception: {str(e)}")
             logger.error("Traceback: %s", traceback.format_exc())
             raise CustomException(id=conversion.id, message=e)

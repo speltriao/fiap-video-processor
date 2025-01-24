@@ -1,44 +1,48 @@
-from unittest.mock import AsyncMock, patch
+from datetime import datetime
+from unittest.mock import AsyncMock
 
 import pytest
+from mockito import any as ANY
+from mockito import mock, unstub, verify, when
 
 from server.adapters import SQSOutHandler
+from server.adapters.output.sqs.dto.conversion_out_dto import ConversionOutDTO
+from server.adapters.output.sqs.enum.conversion_status_enum import ConversionStatusEnum
+from server.adapters.output.sqs.mapper.conversion_out_mapper import ConversionOutMapper
 from server.domain.entity.conversion_entity import ConversionEntity
+from server.env import Environment
 from server.test.integration.adapters import ABCAdaptersTestBase
 
 
 class TestSQSOutputHandler(ABCAdaptersTestBase):
-    # Mock ConversionEntity and ConversionOutMapper for the test
-
-    @pytest.fixture
-    def mock_conversion_out_mapper(self):
-        with patch(
-            "server.adapters.output.sqs.mapper.conversion_out_mapper.ConversionOutMapper.convert_from_entity"
-        ) as mock_mapper:
-            yield mock_mapper
-
     @pytest.mark.asyncio
-    async def test_send_success_message(self, mock_conversion_out_mapper):
-        # Mock queue URL and response
-        mock_queue_url = "https://sqs.fake-queue-url.amazonaws.com/123456789012/MyQueue"
-        mock_message_id = "12345"
+    async def test_send_success_message(self):
+        mocked_sqs_client = AsyncMock()  # Use AsyncMock instead of mock
+        mocked_response = {"MessageId": "test-message-id"}
 
-        # Mock SQS client and its methods
-        mock_sqs_client = AsyncMock()
-        mock_sqs_client.send_message.return_value = {"MessageId": mock_message_id}
+        handler = SQSOutHandler(Environment())
+        conversion_out_dto_instance = ConversionOutDTO(
+            id=1,
+            id_user="user_123",
+            creation_date=datetime(2025, 1, 22, 10, 30),
+            finished_date=datetime(2025, 1, 22, 15, 45),
+            s3_zip_file_key="s3://bucket/key/to/zipfile.zip",
+            status=ConversionStatusEnum.ok,
+        )
+        handler._sqs_client = mocked_sqs_client
+        when(ConversionOutMapper).convert_from_entity(ANY(), ANY()).thenReturn(conversion_out_dto_instance)
+        when(mocked_sqs_client).send_message(
+            QueueUrl=handler._queue_url,
+            MessageBody=mock().json(),
+        ).thenReturn(mocked_response)
 
-        # Patch adapters.session.client to return the mock SQS client
-        with patch("server.adapters.session.client", return_value=mock_sqs_client):
-            # Initialize SQSOutHandler with mocked environment
-            handler = SQSOutHandler(env=AsyncMock(AWS_SQS_OUTPUT_QUEUE=mock_queue_url))
+        completed_conversion = mock(ConversionEntity)
+        s3_video_path = "s3://example-bucket/example-path"
 
-            # Set up the mock for the conversion mapper
-            mock_conversion_out_mapper.return_value.json.return_value = '{"mocked_key": "mocked_value"}'
+        await handler.send_success_message(completed_conversion, s3_video_path)
 
-            # Call the method under test
-            await handler.send_success_message(self._mock_conversion, "s3://mocked-bucket/mock-video-path")
-
-            # Assertions
-            mock_conversion_out_mapper.assert_called_once_with(
-                self._mock_conversion, "s3://mocked-bucket/mock-video-path"
-            )
+        verify(mocked_sqs_client).send_message(
+            QueueUrl=handler._queue_url,
+            MessageBody=mock().json(),
+        )
+        unstub()
