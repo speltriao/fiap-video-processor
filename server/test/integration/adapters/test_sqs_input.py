@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 from mockito import any as ANY
-from mockito import when
+from mockito import unstub, when
 
 from server import adapters
 from server.adapters import SQSOutHandler
@@ -59,3 +59,4 @@ class TestSQSInHandler(ABCAdaptersTestBase):
 
         # Verify calls to receive_message
         mock_sqs_client.receive_message.assert_called_once
+        unstub()

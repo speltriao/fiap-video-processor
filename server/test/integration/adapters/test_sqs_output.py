@@ -1,5 +1,5 @@
 from datetime import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from mockito import any as ANY
@@ -17,10 +17,13 @@ from server.test.integration.adapters import ABCAdaptersTestBase
 class TestSQSOutputHandler(ABCAdaptersTestBase):
     @pytest.mark.asyncio
     async def test_send_success_message(self):
-        mocked_sqs_client = AsyncMock()  # Use AsyncMock instead of mock
+        mocked_sqs_client = AsyncMock()
         mocked_response = {"MessageId": "test-message-id"}
 
+        # Create an instance of the handler
         handler = SQSOutHandler(Environment())
+
+        # Prepare mock data for ConversionOutDTO
         conversion_out_dto_instance = ConversionOutDTO(
             id=1,
             id_user="user_123",
@@ -29,20 +32,22 @@ class TestSQSOutputHandler(ABCAdaptersTestBase):
             s3_zip_file_key="s3://bucket/key/to/zipfile.zip",
             status=ConversionStatusEnum.ok,
         )
+
+        # Mock the SQS client
         handler._sqs_client = mocked_sqs_client
-        when(ConversionOutMapper).convert_from_entity(ANY(), ANY()).thenReturn(conversion_out_dto_instance)
-        when(mocked_sqs_client).send_message(
-            QueueUrl=handler._queue_url,
-            MessageBody=mock().json(),
-        ).thenReturn(mocked_response)
 
-        completed_conversion = mock(ConversionEntity)
-        s3_video_path = "s3://example-bucket/example-path"
+        # Mock the ConversionOutMapper's convert_from_entity method
+        with patch.object(ConversionOutMapper, "convert_from_entity", return_value=conversion_out_dto_instance):
+            # Mock the actual _send_message method
+            with patch.object(SQSOutHandler, "_send_message", new_callable=AsyncMock) as mock_send_message:
+                # Mock the send_message response
+                mock_send_message.return_value = mocked_response
 
-        await handler.send_success_message(completed_conversion, s3_video_path)
+                completed_conversion = AsyncMock(spec=ConversionEntity)
+                s3_video_path = "s3://example-bucket/example-path"
 
-        verify(mocked_sqs_client).send_message(
-            QueueUrl=handler._queue_url,
-            MessageBody=mock().json(),
-        )
-        unstub()
+                # Call the method under test
+                await handler.send_success_message(completed_conversion, s3_video_path)
+
+                # Assert _send_message was called with the expected arguments
+                mock_send_message.assert_called_once_with(conversion_out_dto_instance)

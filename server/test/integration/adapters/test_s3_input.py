@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from mockito import any as ANY
-from mockito import verify, when
+from mockito import unstub, verify, when
 
 from server import test
 from server.adapters.input.s3.handler.s3_in_handler import S3InHandler
@@ -22,6 +22,7 @@ class TestS3Input(ABCAdaptersTestBase):
 
         assert result == "/tmp/test.mp4"
         verify(self._handler, times=1)._perform_s3_operation(ANY())
+        unstub()
 
     @pytest.mark.asyncio
     async def test_download_file_from_s3_fail(self):
@@ -30,3 +31,4 @@ class TestS3Input(ABCAdaptersTestBase):
         # Run the test
         with pytest.raises(CustomException, match="exception_message"):
             await self._handler.download_file_from_s3(self._mock_conversion, self._s3_key)
+        unstub()
