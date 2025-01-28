@@ -19,6 +19,7 @@ from server.exception_handler import CustomException, exception_handler
 
 class SQSInHandler:
     id: int | None = None
+    RUNNING: bool = True
 
     def __init__(self, env: Environment, conversion_use_case: ABCConversionUseCase):
         self._queue_url = env.AWS_SQS_INPUT_QUEUE
@@ -31,10 +32,10 @@ class SQSInHandler:
         Receive and process messages from SQS.
         """
         async with adapters.session.client(service_name=AWSServicesEnum.SQS.value) as sqs_client:
-            while True:
+            while self.RUNNING:
                 response: dict[str, Any] = await sqs_client.receive_message(
                     QueueUrl=self._queue_url,
-                    MaxNumberOfMessages=1,  # Receive one message at a time
+                    MaxNumberOfMessages=1,
                     WaitTimeSeconds=5,
                     VisibilityTimeout=30,
                 )
@@ -49,10 +50,10 @@ class SQSInHandler:
 
                 # Process current message
                 message = messages[0]
-                await self._process_message(message)
-
-                # After processing, delete the message
-                await self._delete_processed_message(message, sqs_client)
+                await asyncio.gather(
+                    self._process_message(message), self._delete_processed_message(message, sqs_client)
+                )
+            return
 
     @exception_handler
     async def _process_message(self, message: dict) -> None:
@@ -93,7 +94,7 @@ class SQSInHandler:
         Delete a single processed message from the SQS queue.
         """
         try:
-            await sqs_client.delete_message(QueueUrl=self._queue_url, ReceiptHandle=message["ReceiptHandle"])
+            await sqs_client.delete_message(QueueUrl=self._queue_url, ReceiptHandle=message.get("ReceiptHandle"))
             logger.info(f"Deleted message: {message['MessageId']}")
         except Exception as e:
             logger.warning(f"Failed to delete message {message['MessageId']}: {e}")

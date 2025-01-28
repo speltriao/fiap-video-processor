@@ -31,7 +31,7 @@ class SQSOutHandler:
 
         await self._send_message(message_body, is_error=True)
 
-    async def _send_message(self, message_body: BaseModel, is_error=False):
+    async def _send_message(self, message_body: BaseModel, is_error=False) -> None:
         async with self._session.client(service_name=AWSServicesEnum.SQS.value) as sqs_client:
             response = await sqs_client.send_message(QueueUrl=self._queue_url, MessageBody=message_body.json())
             logger.info(
