@@ -9,7 +9,7 @@ class ABCAdaptersTestBase(ABC):
     _mock_conversion = ConversionEntity(
         id=1,
         id_user="user123",
-        file_name="xpto/test.mp4",
+        file_name="test.mp4",
         creation_date=datetime.now(),
         local_video_path="/path/to/test.mp4",
         local_zip_file_name="test.zip",
