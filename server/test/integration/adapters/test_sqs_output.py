@@ -2,8 +2,6 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from mockito import any as ANY
-from mockito import mock, unstub, verify, when
 
 from server.adapters import SQSOutHandler
 from server.adapters.output.sqs.dto.conversion_out_dto import ConversionOutDTO
@@ -11,10 +9,10 @@ from server.adapters.output.sqs.enum.conversion_status_enum import ConversionSta
 from server.adapters.output.sqs.mapper.conversion_out_mapper import ConversionOutMapper
 from server.domain.entity.conversion_entity import ConversionEntity
 from server.env import Environment
-from server.test.integration.adapters import ABCAdaptersTestBase
+from server.test.integration import ABCTestBase
 
 
-class TestSQSOutputHandler(ABCAdaptersTestBase):
+class TestSQSOutputHandler(ABCTestBase):
     @pytest.mark.asyncio
     async def test_send_success_message(self):
         mocked_sqs_client = AsyncMock()

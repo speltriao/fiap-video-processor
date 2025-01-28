@@ -12,6 +12,6 @@ async def main() -> None:
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())  # This will now use the decorated version of main
+        asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Application interrupted by user.")

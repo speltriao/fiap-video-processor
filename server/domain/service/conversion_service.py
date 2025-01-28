@@ -19,7 +19,6 @@ class ConversionService(ABCConversionUseCase):
 
     def __init__(self):
         self._local_temp_folder = Environment.TEMP_FOLDER
-        self._temp_images_output_folder = self._local_temp_folder + "/Images"  # Temporary folder for images
         self._zip_file_name: str | None = None
 
     async def create_conversion(self, conversion: ConversionEntity) -> ConversionEntity:
@@ -27,22 +26,22 @@ class ConversionService(ABCConversionUseCase):
         self._id = conversion.id
         file_name: str = conversion.file_name
         file_name_no_extension: str = file_name.split(".")[0]
-        self._temp_images_output_folder += "_" + file_name_no_extension
+        temp_images_output_folder = self._local_temp_folder + "/Images_" + file_name_no_extension
 
         os.makedirs(self._local_temp_folder, exist_ok=True)
-        os.makedirs(self._temp_images_output_folder, exist_ok=True)
+        os.makedirs(temp_images_output_folder, exist_ok=True)
 
-        await self._convert_video(conversion.local_video_path)
-        conversion.local_zip_path = await self._create_images_zip(file_name_no_extension)
+        await self._convert_video(conversion.local_video_path, temp_images_output_folder)
+        conversion.local_zip_path = await self._create_images_zip(file_name_no_extension, temp_images_output_folder)
         conversion.finished_date = datetime.now(timezone.utc).isoformat()
         conversion.local_zip_file_name = self._zip_file_name
         logger.info("Conversion finished.")
-        await self._delete_directory(self._temp_images_output_folder)
+        await self._delete_directory(temp_images_output_folder)
 
         return conversion
 
     @exception_handler
-    async def _convert_video(self, video_temp_file_location: str) -> None:
+    async def _convert_video(self, video_temp_file_location: str, temp_images_output_folder: str) -> None:
         duration: float = self._get_video_duration(video_temp_file_location)
         interval: float = 20
         current_time: float = 0
@@ -51,7 +50,7 @@ class ConversionService(ABCConversionUseCase):
             try:
                 logger.info(f"Processing frame: {current_time} seconds")
 
-                output_path: str = os.path.join(self._temp_images_output_folder, f"frame_at_{int(current_time)}.jpg")
+                output_path: str = os.path.join(temp_images_output_folder, f"frame_at_{int(current_time)}.jpg")
 
                 await asyncio.to_thread(
                     ffmpeg.input(video_temp_file_location, ss=current_time)
@@ -78,18 +77,17 @@ class ConversionService(ABCConversionUseCase):
             raise CustomException(id=self._id, message=e)
 
     @exception_handler
-    async def _create_images_zip(self, file_name_no_extension: str) -> str:
+    async def _create_images_zip(self, file_name_no_extension: str, temp_images_output_folder: str) -> str:
         """Asynchronously creates the zip with all images
         and returns the temp location of the zip
         """
         try:
-            return await asyncio.to_thread(self._zip_files, file_name_no_extension)
+            return await asyncio.to_thread(self._zip_files, file_name_no_extension, temp_images_output_folder)
         except Exception as e:
             raise CustomException(id=self._id, message=e)
 
-    def _zip_files(self, file_name_no_extension: str) -> str:
+    def _zip_files(self, file_name_no_extension: str, folder_to_be_compreesed: str) -> str:
         """Creates the zip with images"""
-        folder_to_be_compreesed = self._temp_images_output_folder
         self._zip_file_name = f"{file_name_no_extension}.zip"
         zip_file_path: str = f"{self._local_temp_folder}/{self._zip_file_name}"
         with ZipFile(zip_file_path, "w") as zipf:

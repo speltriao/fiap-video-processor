@@ -14,10 +14,10 @@ from server.adapters.output.s3.handler.s3_out_handler import S3OutHandler
 from server.domain.service.conversion_service import ConversionService
 from server.env import Environment
 from server.test import to_future
-from server.test.integration.adapters import ABCAdaptersTestBase
+from server.test.integration import ABCTestBase
 
 
-class TestSQSInHandler(ABCAdaptersTestBase):
+class TestSQSInHandler(ABCTestBase):
     @pytest.mark.asyncio
     async def test_receive_messages_success(self):
         mock_sqs_client = AsyncMock()

@@ -7,10 +7,10 @@ from server.adapters.output.s3.handler.s3_out_handler import S3OutHandler
 from server.env import Environment
 from server.exception_handler import CustomException
 from server.test import return_none
-from server.test.integration.adapters import ABCAdaptersTestBase
+from server.test.integration import ABCTestBase
 
 
-class TestS3Output(ABCAdaptersTestBase):
+class TestS3Output(ABCTestBase):
     _handler = S3OutHandler(Environment())
 
     @pytest.mark.asyncio
