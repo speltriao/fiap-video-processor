@@ -98,11 +98,11 @@ jobs:
             -var='public_subnets=${{ secrets.PUBLIC_SUBNETS }}' \
             -var='private_subnets=${{ secrets.PRIVATE_SUBNETS }}' \
             -var='security_groups=${{ secrets.SECURITY_GROUP }}' \
-            -var="aws_sqs_input_queue=${{ secrets.aws_sqs_input_queue }}" \
-            -var="aws_sqs_output_queue=${{ secrets.aws_sqs_output_queue }}" \
-            -var="aws_s3_bucket_name=${{ secrets.aws_s3_bucket_name }}" \
-            -var="aws_s3_bucket_output_folder=${{ secrets.aws_s3_bucket_output_folder }}" \
-            -var="temp_folder=${{ secrets.temp_folder }}" \
+            -var="aws_sqs_input_queue=${{ secrets.AWS_SQS_INPUT_QUEUE }}" \
+            -var="aws_sqs_output_queue=${{ secrets.AWS_SQS_OUTPUT_QUEUE }}" \
+            -var="aws_s3_bucket_name=${{ secrets.AWS_S3_BUCKET_NAME }}" \
+            -var="aws_s3_bucket_output_folder=${{ secrets.AWS_S3_BUCKET_OUTPUT_FOLDER }}" \
+            -var="temp_folder=${{ secrets.TEMP_FOLDER }}" \
 
 
       - name: Update ECS Service
