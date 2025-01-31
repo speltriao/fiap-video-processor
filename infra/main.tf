@@ -11,8 +11,8 @@ resource "aws_ecs_cluster" "frameshot_cluster" {
 
 resource "aws_ebs_volume" "video_volume" {
   availability_zone = var.aws_region  # Choose the correct AZ
-  size              = 5           # Size of the volume in GiB (adjust as needed)
-  volume_type       = "gp2"       # General Purpose SSD (adjust type if needed)
+  size              = 5               # Size of the volume in GiB (adjust as needed)
+  type              = "gp2"            # Corrected argument (volume_type -> type)
 }
 
 resource "aws_ecs_task_definition" "frameshot-app-task" {
