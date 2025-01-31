@@ -1,20 +1,3 @@
-provider "aws" {
-  region     = var.aws_region
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
-  token      = var.aws_session_token
-}
-
-resource "aws_ecs_cluster" "frameshot_cluster" {
-  name = "frameshot-cluster"
-}
-
-resource "aws_ebs_volume" "video_volume" {
-  availability_zone = var.aws_region  # Choose the correct AZ
-  size              = 5               # Size of the volume in GiB (adjust as needed)
-  type              = "gp2"            # Corrected argument (volume_type -> type)
-}
-
 resource "aws_ecs_task_definition" "frameshot-app-task" {
   family                   = "frameshot-app-task"
   network_mode             = "awsvpc"
@@ -23,15 +6,6 @@ resource "aws_ecs_task_definition" "frameshot-app-task" {
   memory                   = "2048"
   execution_role_arn       = var.ecs_task_execution_role_arn
   task_role_arn            = var.ecs_task_execution_role_arn
-
-  volumes = [
-    {
-      name = "tmp-volume"
-      ebs_volume = {
-        volume_id = aws_ebs_volume.video_volume.id
-      }
-    }
-  ]
 
   container_definitions = jsonencode([{
     name      = "frameshot-app"
@@ -64,26 +38,5 @@ resource "aws_ecs_task_definition" "frameshot-app-task" {
         awslogs-stream-prefix = "ecs"
       }
     }
-    mountPoints = [
-      {
-        sourceVolume  = "tmp-volume"
-        containerPath = "/tmp"
-        readOnly      = false
-      }
-    ]
   }])
-}
-
-resource "aws_ecs_service" "frameshot_service" {
-  name            = "frameshot-app"
-  cluster         = aws_ecs_cluster.frameshot_cluster.id
-  task_definition = aws_ecs_task_definition.frameshot-app-task.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
-
-  network_configuration {
-    subnets         = var.private_subnets
-    security_groups = var.security_groups
-    assign_public_ip = true
-  }
 }
