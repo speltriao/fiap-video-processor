@@ -1,0 +1,119 @@
+name: Deploy to ECS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_push:
+    name: Build and Push Image
+    runs-on: ubuntu-latest
+    outputs:
+      ecr_url: ${{ steps.build-image.outputs.ECR_URL }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build Docker image
+        run: |
+          docker build -t frameshot-app:latest .
+
+      - name: Push Docker image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: frameshot-app
+          IMAGE_TAG: latest
+        run: |
+          echo ECR_URL=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG >> "$GITHUB_OUTPUT"
+          docker tag frameshot-app:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+  deploy_infra:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    needs: build_and_push
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Check if ECS Service exists
+        id: check-service
+        run: |
+          SERVICE_NAME="frameshot-app"
+          CLUSTER_NAME="frameshot-cluster"
+          EXISTING_SERVICE=$(aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME --query 'services[?status==`ACTIVE`].serviceName' --output text || true)
+          
+          if [ -z "$EXISTING_SERVICE" ]; then
+            echo "service_exists=false" >> $GITHUB_ENV
+          else
+            echo "service_exists=true" >> $GITHUB_ENV
+          fi
+
+      - name: Set up Terraform
+        if: env.service_exists == 'false'
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: "1.5.0"
+
+      - name: Terraform Init
+        if: env.service_exists == 'false'
+        run: |
+          cd infra/
+          terraform init
+
+      - name: Terraform Apply
+        if: env.service_exists == 'false'
+        run: |
+          cd infra/
+          terraform apply -auto-approve \
+            -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
+            -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+            -var="aws_session_token=${{ secrets.AWS_SESSION_TOKEN }}" \
+            -var="aws_region=${{ secrets.AWS_REGION }}" \
+            -var="ecr_image_url=${{ secrets.ECR_URL  }}" \
+            -var="ecs_task_execution_role_arn=${{ secrets.ROLE }}" \
+            -var="vpc_id=${{ secrets.VPC_ID }}" \
+            -var='public_subnets=${{ secrets.PUBLIC_SUBNETS }}' \
+            -var='private_subnets=${{ secrets.PRIVATE_SUBNETS }}' \
+            -var='security_groups=${{ secrets.SECURITY_GROUP }}' \
+            -var="aws_sqs_input_queue=${{ secrets.aws_sqs_input_queue }}" \
+            -var="aws_sqs_output_queue=${{ secrets.aws_sqs_output_queue }}" \
+            -var="aws_s3_bucket_name=${{ secrets.aws_s3_bucket_name }}" \
+            -var="aws_s3_bucket_output_folder=${{ secrets.aws_s3_bucket_output_folder }}" \
+            -var="temp_folder=${{ secrets.temp_folder }}" \
+
+
+      - name: Update ECS Service
+        if: env.service_exists == 'true'
+        run: |
+          SERVICE_NAME="frameshot-app"
+          CLUSTER_NAME="frameshot-cluster"
+          TASK_DEFINITION_ARN=$(aws ecs describe-task-definition --task-definition frameshot-app-task --query 'taskDefinition.taskDefinitionArn' --output text)
+          
+          aws ecs update-service \
+            --cluster $CLUSTER_NAME \
+            --service $SERVICE_NAME \
+            --task-definition $TASK_DEFINITION_ARN \
+            --desired-count 1
